@@ -1,1 +1,1 @@
-**This is a TODO app with go and fyne**
+**This is a TODO app with go**
