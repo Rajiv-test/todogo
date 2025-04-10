@@ -1,7 +1,27 @@
 package main
 
-import "fmt"
+import (
+	"log"
+	"os"
+
+	"github.com/Rajiv-test/todogo/internal/database"
+	"github.com/joho/godotenv"
+)
+
 
 func main() {
-	fmt.Println("Starting a TODO app with go")
+	godotenv.Load(".env")
+	dbPath := os.Getenv("PATH_TO_DB")
+	if dbPath == ""{
+		log.Fatal("please specify path to database")
+	}
+	db,err := database.NewClient(dbPath)
+	if err != nil{
+		log.Fatalf("error creating a database client: %v",err)
+	}
+	err = db.Reset()
+	if err != nil {
+		log.Fatal("couldn't reset the database",err)
+	}
+	
 }
