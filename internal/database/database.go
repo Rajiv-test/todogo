@@ -17,8 +17,18 @@ func NewClient(pathToDB string) (Client,error){
 	if err != nil {
 		return Client{},err
 	}
+	
+	// Enable foreign keys for this connection
+	_, err = db.Exec("PRAGMA foreign_keys = ON;")
+	if err != nil {
+		return Client{},err
+	}
+
 	c := Client{db}
-	_ = c.automigrate()
+	err = c.automigrate()
+	if err != nil {
+		return Client{},err
+	}
 	return c,nil
 }
 
@@ -35,7 +45,21 @@ func (c *Client) automigrate() error{
 	if err != nil {
 		return err
 	}
-	log.Print("successfully created a database client")
+	log.Print("successfully created a users table")
+
+	tasksTable := `
+	CREATE TABLE IF NOT EXISTS tasks (
+		id INTEGER PRIMARY KEY NOT NULL,
+		user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		completed BOOLEAN DEFAULT 0
+	);`
+	_,err = c.db.Exec(tasksTable)
+	if err != nil {
+		return err
+	}
+	log.Print("successfully created a tasks table")
 	return nil
 }
 
