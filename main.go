@@ -19,9 +19,13 @@ func main() {
 	if err != nil{
 		log.Fatalf("error creating a database client: %v",err)
 	}
-	err = db.Reset()
+	user,err := db.AddUser("Rajiv")
 	if err != nil {
-		log.Fatal("couldn't reset the database",err)
+		log.Fatal(err)
 	}
-	
+	err = db.DeleteUser(" Rajiv")
+	if err != nil {
+		log.Fatal(err)
+	}	
+	log.Print(*user)
 }
