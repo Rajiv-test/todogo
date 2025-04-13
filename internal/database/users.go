@@ -1,9 +1,7 @@
 package database
 
 import (
-	"errors"
 	"log"
-	"strings"
 	"time"
 )
 
@@ -18,14 +16,10 @@ type User struct{
 }
 
 func (c * Client) AddUser(username,password string) (*User,error){
-	name := strings.ToLower(strings.TrimSpace(username))
-	if len(name) == 0 {
-		return nil,errors.New("username cannot be empty")
-	}
 	query := `INSERT INTO users
 			(name,password)
 		values (?,?)Returning *;`
-	userRow := c.db.QueryRow(query,strings.ToLower(username),password)
+	userRow := c.db.QueryRow(query,username,password)
 	var user User
 	err := userRow.Scan(&user.Id,&user.Name,&user.Created_at,&user.Updated_at,&user.Tasks,&user.Password)
 	if err != nil {
@@ -35,17 +29,25 @@ func (c * Client) AddUser(username,password string) (*User,error){
 	return &user,nil
 }
 
-func (c *Client) DeleteUser(username string) error{
-	name := strings.ToLower(strings.TrimSpace(username))
-	if len(name) == 0 {
-		return errors.New("username cannot be empty")
+func (c * Client) GetUser(username string) (User,error){
+	query := `SELECT * FROM users WHERE name = ?;`
+	queryRow := c.db.QueryRow(query,username)
+	var user User
+	err := queryRow.Scan(&user.Id,&user.Name,&user.Created_at,&user.Updated_at,&user.Tasks,&user.Password)
+	if err != nil {
+		return User{},err
 	}
+	return user,nil
+}
+
+
+func (c *Client) DeleteUser(username string) error{
 	query := `DELETE FROM users WHERE name = ?;`
-	_,err := c.db.Exec(query,name)
+	_,err := c.db.Exec(query,username)
 	if err != nil {
 		return err
 	}
-	log.Print("Successfully deleted the user ",name)
+	log.Print("Successfully deleted the user ",username)
 	return nil
 }
 

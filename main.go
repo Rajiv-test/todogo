@@ -13,7 +13,7 @@ import (
 type config struct{
 	db database.Client
 	dbPath string
-	user string
+	user database.User
 }
 
 func main() {
@@ -29,7 +29,6 @@ func main() {
 	cfg := &config{
 		db: dbClient,
 		dbPath: databasePath,
-		user: "",
 	}
 	reader := bufio.NewScanner(os.Stdin)
 	for {
@@ -48,7 +47,7 @@ func main() {
 		if exists{
 			err = command.callback(cfg,args...)
 			if err != nil{
-				fmt.Println(err)
+				fmt.Println(err.Error())
 			}
 			continue
 		}else{

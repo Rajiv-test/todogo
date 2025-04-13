@@ -20,18 +20,24 @@ func getcommands()map[string]command{
 			name: "login",
 			usage: "login username",
 			description: "logs in the specified user with credentials",
+			callback: commandLogin,
+		},
+		"logout":{
+			name: "logout",
+			usage: "logout",
+			description: "ends the session of current user",
 			callback: nil,
 		},
 		"reg":{
 			name: "register",
 			usage: "reg (username)",
-			description: "Registers the new user",
+			description: "Registers the new user and logs the user in automatically",
 			callback: commandRegister,
 		},
 		"exit":{
 			name: "exit",
 			usage: "exit",
-			description: "exits the currect session",
+			description: "exits the app",
 			callback: commandExit,
 		},
 		"del":{
