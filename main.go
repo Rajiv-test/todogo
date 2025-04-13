@@ -13,6 +13,7 @@ import (
 type config struct{
 	db database.Client
 	dbPath string
+	user string
 }
 
 func main() {
@@ -28,6 +29,7 @@ func main() {
 	cfg := &config{
 		db: dbClient,
 		dbPath: databasePath,
+		user: "",
 	}
 	reader := bufio.NewScanner(os.Stdin)
 	for {
