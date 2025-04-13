@@ -26,7 +26,7 @@ func getcommands()map[string]command{
 			name: "logout",
 			usage: "logout",
 			description: "ends the session of current user",
-			callback: nil,
+			callback: commandLogout,
 		},
 		"reg":{
 			name: "register",
@@ -44,7 +44,7 @@ func getcommands()map[string]command{
 			name: "delete",
 			usage: "del",
 			description: "deletes current user data",
-			callback: nil,
+			callback: commandDelete,
 		},
 		"add":{
 			name: "add",
@@ -64,11 +64,17 @@ func getcommands()map[string]command{
 			description: "modifies specified task or user details",
 			callback: nil,
 		},
-		"tasks":{
-			name: "tasks",
+		"lst":{
+			name: "list tasks",
 			usage: "[-u][-c] [n] tasks",
 			description: "lists all the tasks for the user if tag is not provided,\n		-u to list all uncompleted tasks and -c list all completed tasks and\n		provide optional [n(integer)] to list n tasks",
 			callback: nil,
+		},
+		"ls":{
+			name: "list users",
+			usage: "ls",
+			description: "lists all the users available only works if you are admin",
+			callback: commandListUsers,
 		},
 	}
 

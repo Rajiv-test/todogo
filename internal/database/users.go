@@ -47,7 +47,6 @@ func (c *Client) DeleteUser(username string) error{
 	if err != nil {
 		return err
 	}
-	log.Print("Successfully deleted the user ",username)
 	return nil
 }
 
@@ -63,7 +62,7 @@ func (c *Client) GetUsers()([]User,error){
 	// Assuming users is an appropriate slice
 for dbUserRows.Next() {
     var user User // or whatever your user type is
-    err := dbUserRows.Scan(&user.Id, &user.Name, &user.Created_at,&user.Updated_at,&user.Tasks)
+    err := dbUserRows.Scan(&user.Id, &user.Name, &user.Created_at,&user.Updated_at,&user.Tasks,&user.Password)
     if err != nil {
         return []User{},err
     }

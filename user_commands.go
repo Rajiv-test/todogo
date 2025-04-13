@@ -7,12 +7,17 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 )
 
 func commandRegister(c *config, args ...string) error {
 	if len(args) != 1 {
-		return errors.New("wrong usage of reg command it takes 1 argument as username")
+		return errors.New("wrong usage of reg command use help command to learn more")
 	}
+	if c.user != nil {
+		return fmt.Errorf("logout to register new user. use reg command to register new user")
+	}
+
 	username := args[0]
 	_,err := c.db.GetUser(username)
 	if err == nil{
@@ -36,7 +41,7 @@ func commandRegister(c *config, args ...string) error {
 				return err
 			}
 			fmt.Printf("New User created with username: %v at %v with 0 tasks\n",newUser.Name,newUser.Created_at)
-			c.user = *newUser
+			c.user = newUser
 			fmt.Println("Current user > ",username)
 			fmt.Println("You can use help to know more about available commands")
 			break
@@ -47,15 +52,19 @@ func commandRegister(c *config, args ...string) error {
 }
 
 func commandLogin(c *config, args ...string) error {
-	if c.user.Name != ""{
+	if len(args) != 1 {
+		return errors.New("wrong usage of login command use help command to learn more")
+	}
+	username := args[0]
+	if c.user != nil && c.user.Name == username{
+		return fmt.Errorf("user already logged in")
+	}
+	if c.user != nil{
 		fmt.Printf("logout current user: %v to login\n",c.user.Name)
 		fmt.Println("Use logout command to logout the current user")
 		return nil
 	}
-	if len(args) != 1 {
-		return errors.New("wrong usage of login command it takes 1 argument as username")
-	}
-	username := args[0]
+	
 	currentUser,err := c.db.GetUser(username)
 	if err == sql.ErrNoRows{
 		return errors.New("user doesn't exit use the reg command to register new user")
@@ -70,6 +79,72 @@ func commandLogin(c *config, args ...string) error {
 		return fmt.Errorf("incorrect password try again! ") 
 	}
 	
-	c.user = currentUser
+	c.user = &currentUser
+	return nil
+}
+
+
+func commandLogout(c *config,args ...string)error{
+	if len(args) > 0 {
+		return fmt.Errorf("logout command takes no arguments use help to learn more")
+	}
+	if c.user == nil{
+		return fmt.Errorf("no user to logout")
+	}
+	c.user = nil
+	return nil
+}
+
+func commandDelete(c *config,args ...string)error{
+	if len(args) != 1 {
+		return errors.New("wrong usage of delete use help command to learn more")
+	}
+	if c.user == nil {
+		return fmt.Errorf("login in to delete users")
+	}
+	if c.user.Name != args[0] && c.user.Name != "admin"{
+		return fmt.Errorf("cannot delete other users unless you are admin")
+	}
+	err := c.db.DeleteUser(args[0])
+	if err != nil {
+		return err
+	}
+	fmt.Printf("%v successfully deleted the user: %v\n",c.user.Name,args[0])
+	if c.user.Name == args[0]{
+		c.user = nil
+	}
+	return nil
+}
+
+func commandListUsers(c *config,args ...string) error {
+	if len(args) != 0 {
+		return errors.New("wrong usage of login command use help command to learn more")
+	}
+	if c.user == nil {
+		return fmt.Errorf("login in as admin to view all registered users")
+	}
+	if c.user.Name != "admin"{
+		return fmt.Errorf("not authorized to list users")
+	}
+	users,err := c.db.GetUsers()
+	if err != nil {
+		return err
+	}
+	if len(users) == 0 || (len(users) == 1 && users[0].Name == "admin"){
+		fmt.Println("No users for now")
+		return nil
+	}
+	fmt.Printf("%-5s %-8s %-14s %-12s %-5s\n", "No", "Name", "CreatedAt", "UpdatedAt", "Tasks")
+	fmt.Println(strings.Repeat("-", 50)) // Add a separator line
+
+	// Print each user with aligned columns
+	for i, user := range users {
+		fmt.Printf("%-4d %-9s %-14s %-14s %-5d\n", 
+			i,
+			user.Name,
+			user.Created_at.Format(time.DateOnly),
+			user.Updated_at.Format(time.DateOnly),
+			user.Tasks)
+	}
 	return nil
 }

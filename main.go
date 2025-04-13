@@ -13,7 +13,7 @@ import (
 type config struct{
 	db database.Client
 	dbPath string
-	user database.User
+	user *database.User
 }
 
 func main() {
