@@ -5,70 +5,68 @@ import (
 	"time"
 )
 
-
-type User struct{
-	Id int
-	Name string
+type User struct {
+	Id         int
+	Name       string
 	Created_at time.Time
 	Updated_at time.Time
-	Tasks int
-	Password string
+	Tasks      int
+	Password   string
+	IsAdmin bool
 }
 
-func (c * Client) AddUser(username,password string) (*User,error){
+func (c *Client) AddUser(username, password string,isadmin bool) (*User, error) {
 	query := `INSERT INTO users
-			(name,password)
-		values (?,?)Returning *;`
-	userRow := c.db.QueryRow(query,username,password)
+			(name,password,is_admin)
+		values (?,?,?)Returning *;`
+	userRow := c.db.QueryRow(query, username, password,isadmin)
 	var user User
-	err := userRow.Scan(&user.Id,&user.Name,&user.Created_at,&user.Updated_at,&user.Tasks,&user.Password)
+	err := userRow.Scan(&user.Id, &user.Name, &user.Created_at, &user.Updated_at, &user.Tasks, &user.Password,&user.IsAdmin)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	log.Printf("User %s added successfully with ID %d", user.Name, user.Id)
-	return &user,nil
+	return &user, nil
 }
 
-func (c * Client) GetUser(username string) (User,error){
+func (c *Client) GetUser(username string) (User, error) {
 	query := `SELECT * FROM users WHERE name = ?;`
-	queryRow := c.db.QueryRow(query,username)
+	queryRow := c.db.QueryRow(query, username)
 	var user User
-	err := queryRow.Scan(&user.Id,&user.Name,&user.Created_at,&user.Updated_at,&user.Tasks,&user.Password)
+	err := queryRow.Scan(&user.Id, &user.Name, &user.Created_at, &user.Updated_at, &user.Tasks, &user.Password,&user.IsAdmin)
 	if err != nil {
-		return User{},err
+		return User{}, err
 	}
-	return user,nil
+	return user, nil
 }
 
-
-func (c *Client) DeleteUser(username string) error{
+func (c *Client) DeleteUser(username string) error {
 	query := `DELETE FROM users WHERE name = ?;`
-	_,err := c.db.Exec(query,username)
+	_, err := c.db.Exec(query, username)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-
-func (c *Client) GetUsers()([]User,error){
+func (c *Client) GetUsers() ([]User, error) {
 	query := `SELECT * FROM USERS`
 
-	dbUserRows,err := c.db.Query(query)
+	dbUserRows, err := c.db.Query(query)
 	if err != nil {
-		return []User{},err
+		return []User{}, err
 	}
 	var users []User
 	// Assuming users is an appropriate slice
-for dbUserRows.Next() {
-    var user User // or whatever your user type is
-    err := dbUserRows.Scan(&user.Id, &user.Name, &user.Created_at,&user.Updated_at,&user.Tasks,&user.Password)
-    if err != nil {
-        return []User{},err
-    }
-    // Add user to your slice
-    users = append(users, user)
-}
-	return users,nil
+	for dbUserRows.Next() {
+		var user User // or whatever your user type is
+		err := dbUserRows.Scan(&user.Id, &user.Name, &user.Created_at, &user.Updated_at, &user.Tasks, &user.Password,&user.IsAdmin)
+		if err != nil {
+			return []User{}, err
+		}
+		// Add user to your slice
+		users = append(users, user)
+	}
+	return users, nil
 
 }

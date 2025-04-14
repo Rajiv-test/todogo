@@ -10,10 +10,10 @@ func commandHelp(c *config, args ...string) error {
 		log.Print("help command doesn't take arguments")
 	}
 	commandList := getcommands()
-	for _,comm := range commandList{
-		fmt.Println("name: ",comm.name)
-		fmt.Println("description: ",comm.description)
-		fmt.Println("usage: ",comm.usage)
+	for _, comm := range commandList {
+		fmt.Println("name: ", comm.name)
+		fmt.Println("description: ", comm.description)
+		fmt.Println("usage: ", comm.usage)
 		fmt.Println("---------------------")
 	}
 	return nil

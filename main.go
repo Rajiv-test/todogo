@@ -10,24 +10,25 @@ import (
 	"github.com/Rajiv-test/todogo/internal/database"
 	"github.com/joho/godotenv"
 )
-type config struct{
-	db database.Client
+
+type config struct {
+	db     database.Client
 	dbPath string
-	user *database.User
+	user   *database.User
 }
 
 func main() {
 	godotenv.Load(".env")
 	databasePath := os.Getenv("PATH_TO_DB")
-	if databasePath == ""{
+	if databasePath == "" {
 		log.Fatal("please specify path to database")
 	}
-	dbClient,err := database.NewClient(databasePath)
-	if err != nil{
-		log.Fatalf("error creating a database client: %v",err)
+	dbClient, err := database.NewClient(databasePath)
+	if err != nil {
+		log.Fatalf("error creating a database client: %v", err)
 	}
 	cfg := &config{
-		db: dbClient,
+		db:     dbClient,
 		dbPath: databasePath,
 	}
 	reader := bufio.NewScanner(os.Stdin)
@@ -35,26 +36,26 @@ func main() {
 		fmt.Print("todo > ")
 		reader.Scan()
 		input := cleanInput(reader.Text())
-		if len(input) == 0{
+		if len(input) == 0 {
 			continue
 		}
 		commandName := input[0]
 		args := []string{}
-		if len(input) >1 {
+		if len(input) > 1 {
 			args = input[1:]
 		}
-		command,exists := getcommands()[commandName]
-		if exists{
-			err = command.callback(cfg,args...)
-			if err != nil{
+		command, exists := getcommands()[commandName]
+		if exists {
+			err = command.callback(cfg, args...)
+			if err != nil {
 				fmt.Println(err.Error())
 			}
 			continue
-		}else{
+		} else {
 			fmt.Println("Unknown command use help to find existing commands")
 			continue
+		}
 	}
-}
 }
 
 func cleanInput(text string) []string {
