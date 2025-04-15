@@ -8,6 +8,8 @@ import (
 	"os"
 	"strings"
 	"time"
+	"github.com/fatih/color"
+	"github.com/rodaine/table"
 )
 
 func commandRegister(c *config, args ...string) error {
@@ -134,19 +136,16 @@ func commandListUsers(c *config, args ...string) error {
 	if err != nil {
 		return err
 	}
+	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
+		columnFmt := color.New(color.FgRed).SprintfFunc()
 
-	fmt.Printf("%-5s %-8s %-14s %-12s %-5s %-5s\n", "No", "Name", "CreatedAt", "UpdatedAt", "Tasks", "admin")
-	fmt.Println(strings.Repeat("-", 60)) // Add a separator line
+	tbl:= table.New("No", "userName", "CreatedAt", "UpdatedAt", "Tasks")
+	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
 
-	// Print each user with aligned columns
-	for i, user := range users {
-		fmt.Printf("%-4d %-9s %-14s %-14s %-5d %-6v\n",
-			i,
-			user.Name,
-			user.Created_at.Format(time.DateOnly),
-			user.Updated_at.Format(time.DateOnly),
-			user.Tasks,
-			user.IsAdmin)
+	for i,user := range users{
+		tbl.AddRow(i+1,user.Name,user.Created_at.Format(time.DateOnly),user.Updated_at.Format(time.DateOnly),user.Tasks)
 	}
+	tbl.Print()
+
 	return nil
 }

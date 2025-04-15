@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"github.com/fatih/color"
+	"github.com/rodaine/table"
 )
 
 func commandAdd(c *config, args ...string) error {
@@ -79,6 +81,11 @@ func commandListTasks(c *config,args ...string)error{
 	if len(args) > 1 || (len(args) == 1 && args[0] != "-u"){
 		return fmt.Errorf("wrong usage of lst command use help command to learn more")
 	}
+	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
+	columnFmt := color.New(color.FgRed).SprintfFunc()
+
+	tbl:= table.New("No", "TaskName", "CreatedAt", "UpdatedAt", "deadline", "completed", "overDeadline", "descritpion")
+	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
 	if len(args) == 0 {
 		tasks,err := c.db.GetTasks(c.user.Name)
 		if err != nil {
@@ -87,19 +94,13 @@ func commandListTasks(c *config,args ...string)error{
 			}
 			return fmt.Errorf("error getting tasks %v",err)
 		}
-		fmt.Printf("%-5s %-10s %-14s %-12s %-30s %-15s %-15s %-10s \n", "No", "TaskName", "CreatedAt", "UpdatedAt", "deadline", "completed", "overDeadline", "descritpion")
-		fmt.Println(strings.Repeat("-", 100)) // Add a separator line
-		for i,task := range tasks{
-			fmt.Printf("%-3v %-15v %-14v %-14v %-30v %-10v %-10v %v \n",
-			i+1,
-			task.TaskName,
-			task.CreatedAt.Format(time.DateOnly),
-			task.UpdatedAt.Format(time.DateOnly),
-			task.Deadline.Time.Format(time.DateTime),
-			task.Completed,
-			task.OverDeadline,
-			task.Description)
-		}
+		
+		for i, task := range tasks {
+			tbl.AddRow(i+1,task.TaskName,task.CreatedAt.Format(time.DateTime),task.UpdatedAt.Format(time.DateTime),task.Deadline.Time.Format(time.DateTime),task.Completed,task.OverDeadline,task.Description)
+		  }
+		  
+		  tbl.Print()
+		  return nil
 
 	}
 	if len(args) == 1 {
@@ -110,19 +111,14 @@ func commandListTasks(c *config,args ...string)error{
 			}
 			return fmt.Errorf("error getting uncompleted tasks %v",err)
 		}
-		fmt.Printf("%-5s %-10s %-14s %-12s %-20s %-15s %-15s %-10s \n", "No", "TaskName", "CreatedAt", "UpdatedAt", "deadline", "completed", "overDeadline", "descritpion")
-		fmt.Println(strings.Repeat("-", 120)) // Add a separator line
-		for i,task := range tasks{
-			fmt.Printf("%-3v %-10v %-12v %-12v %-20v %-10v %-10v %v \n",
-			i+1,
-			task.TaskName,
-			task.CreatedAt.Format(time.DateOnly),
-			task.UpdatedAt.Format(time.DateOnly),
-			task.Deadline.Time.Format(time.DateTime),
-			task.Completed,
-			task.OverDeadline,
-			task.Description)
-		}
+		for i, task := range tasks {
+			if !task.Deadline.Valid{
+				task.Deadline.Time = time.Time{}
+			}
+			tbl.AddRow(i+1,task.TaskName,task.CreatedAt.Format(time.DateTime),task.UpdatedAt.Format(time.DateTime),task.Deadline.Time.Format(time.DateTime),task.Completed,task.OverDeadline,task.Description)
+		  }
+		  
+		  tbl.Print()
 
 	}
 	return nil
