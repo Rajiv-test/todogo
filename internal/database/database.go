@@ -3,7 +3,6 @@ package database
 import (
 	"database/sql"
 	"fmt"
-
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -64,6 +63,35 @@ func (c *Client) automigrate() error {
 	if err != nil {
 		return err
 	}
+
+	incrementTriggerQuery := `
+    CREATE TRIGGER IF NOT EXISTS increment_user_tasks
+    AFTER INSERT ON tasks
+    FOR EACH ROW
+    BEGIN
+        UPDATE users
+        SET tasks = tasks + 1,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE name = NEW.username;
+    END;`
+    
+    _, err = c.db.Exec(incrementTriggerQuery)
+    if err != nil {
+        return fmt.Errorf("error setting increment trigger %v",err)
+    }
+	decrementTriggerQuery := `CREATE TRIGGER IF NOT EXISTS decrement_user_tasks
+			AFTER DELETE ON tasks
+			FOR EACH ROW
+			BEGIN
+				UPDATE users
+				SET tasks = tasks - 1,
+					updated_at = CURRENT_TIMESTAMP
+				WHERE name = OLD.username;
+			END;`
+	_, err = c.db.Exec(decrementTriggerQuery)
+    if err != nil {
+        return fmt.Errorf("error setting decrement trigger %v",err)
+    }
 	return nil
 }
 
