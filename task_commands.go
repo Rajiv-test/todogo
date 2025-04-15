@@ -72,6 +72,62 @@ func commandRemove(c *config,args ...string) error{
 	return nil
 }
 
+func commandListTasks(c *config,args ...string)error{
+	if c.user == nil {
+		return fmt.Errorf("login to see tasks")
+	}
+	if len(args) > 1 || (len(args) == 1 && args[0] != "-u"){
+		return fmt.Errorf("wrong usage of lst command use help command to learn more")
+	}
+	if len(args) == 0 {
+		tasks,err := c.db.GetTasks(c.user.Name)
+		if err != nil {
+			if err == sql.ErrNoRows{
+				return fmt.Errorf("no tasks for current user")
+			}
+			return fmt.Errorf("error getting tasks %v",err)
+		}
+		fmt.Printf("%-5s %-10s %-14s %-12s %-30s %-15s %-15s %-10s \n", "No", "TaskName", "CreatedAt", "UpdatedAt", "deadline", "completed", "overDeadline", "descritpion")
+		fmt.Println(strings.Repeat("-", 100)) // Add a separator line
+		for i,task := range tasks{
+			fmt.Printf("%-3v %-15v %-14v %-14v %-30v %-10v %-10v %v \n",
+			i+1,
+			task.TaskName,
+			task.CreatedAt.Format(time.DateOnly),
+			task.UpdatedAt.Format(time.DateOnly),
+			task.Deadline.Time.Format(time.DateTime),
+			task.Completed,
+			task.OverDeadline,
+			task.Description)
+		}
+
+	}
+	if len(args) == 1 {
+		tasks,err := c.db.GetUncompletedTasks(c.user.Name)
+		if err != nil {
+			if err == sql.ErrNoRows{
+				return fmt.Errorf("no tasks for current user")
+			}
+			return fmt.Errorf("error getting uncompleted tasks %v",err)
+		}
+		fmt.Printf("%-5s %-10s %-14s %-12s %-20s %-15s %-15s %-10s \n", "No", "TaskName", "CreatedAt", "UpdatedAt", "deadline", "completed", "overDeadline", "descritpion")
+		fmt.Println(strings.Repeat("-", 120)) // Add a separator line
+		for i,task := range tasks{
+			fmt.Printf("%-3v %-10v %-12v %-12v %-20v %-10v %-10v %v \n",
+			i+1,
+			task.TaskName,
+			task.CreatedAt.Format(time.DateOnly),
+			task.UpdatedAt.Format(time.DateOnly),
+			task.Deadline.Time.Format(time.DateTime),
+			task.Completed,
+			task.OverDeadline,
+			task.Description)
+		}
+
+	}
+	return nil
+}
+
 
 func parseDeadline(durationStr string) (sql.NullTime, error) {
 	// Handle days specifically since Go doesn't have a direct "d" unit

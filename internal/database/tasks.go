@@ -34,7 +34,7 @@ func (c *Client) GetTask(username, taskname string) (Task, error) {
 		return Task{},err
 	}
 	var task Task
-	err = taskRow.Scan(&task.Id, &task.Username, &task.TaskName, &task.Description, &task.CreatedAt, &task.UpdatedAt, &task.Completed, &task.Deadline, &task.OverDeadline)
+	err = taskRow.Scan(&task.Id, &task.Username, &task.TaskName, &task.Description, &task.CreatedAt, &task.UpdatedAt, &task.Deadline, &task.Completed, &task.OverDeadline)
 	if err != nil {
 		return Task{}, err
 	}
@@ -42,7 +42,16 @@ func (c *Client) GetTask(username, taskname string) (Task, error) {
 }
 
 func (c *Client) GetTasks(username string) ([]Task, error) {
-	query := `SELECT * FROM tasks WHERE username = ?;`
+	query := `SELECT * FROM tasks
+		WHERE username = ? 
+		ORDER BY 
+			completed ASC,
+			CASE 
+				WHEN deadline IS NULL THEN 1
+				ELSE 0
+			END,
+			deadline ASC,
+			id ASC;`
 	taskRows, err := c.db.Query(query, username)
 	if err != nil {
 		return []Task{}, err
@@ -50,7 +59,7 @@ func (c *Client) GetTasks(username string) ([]Task, error) {
 	var tasks []Task
 	for taskRows.Next() {
 		var task Task // or whatever your user type is
-		err := taskRows.Scan(&task.Id, &task.Username, &task.TaskName, &task.Description, &task.CreatedAt, &task.UpdatedAt, &task.Completed, &task.Deadline, &task.OverDeadline)
+		err := taskRows.Scan(&task.Id, &task.Username, &task.TaskName, &task.Description, &task.CreatedAt, &task.UpdatedAt, &task.Deadline, &task.Completed, &task.OverDeadline)
 		if err != nil {
 			return []Task{}, err
 		}
@@ -59,6 +68,35 @@ func (c *Client) GetTasks(username string) ([]Task, error) {
 	}
 	return tasks, nil
 }
+
+func (c *Client) GetUncompletedTasks(username string) ([]Task,error){
+	query := `SELECT * FROM tasks
+		WHERE username = ? AND completed = 0
+		ORDER BY 
+			CASE WHEN deadline IS NULL THEN 1 ELSE 0 END,
+			deadline ASC;`
+	taskRows, err := c.db.Query(query, username)
+	if err != nil {
+		return []Task{}, err
+	}
+	var tasks []Task
+	for taskRows.Next() {
+		var task Task // or whatever your user type is
+		err := taskRows.Scan(&task.Id, &task.Username, &task.TaskName, &task.Description, &task.CreatedAt, &task.UpdatedAt,&task.Deadline, &task.Completed, &task.OverDeadline)
+		if err != nil {
+			return []Task{}, err
+		}
+		// Add task to your slice
+		tasks = append(tasks, task)
+	}
+	return tasks, nil
+
+}
+
+
+
+
+
 func (c *Client) DeleteTask(username, taskname string) error{
 	query := "DELETE FROM tasks WHERE username = ? AND taskname = ?;"
 	_,err := c.db.Exec(query,username,taskname) 
