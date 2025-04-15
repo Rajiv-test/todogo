@@ -11,7 +11,7 @@ import (
 )
 
 func commandRegister(c *config, args ...string) error {
-	if len(args) != 1 && (len(args) == 2 && args[0] != "-a"){
+	if len(args) != 1 && (len(args) == 2 && args[0] != "-a") {
 		return errors.New("wrong usage of reg command use help command to learn more")
 	}
 	if c.user != nil {
@@ -20,7 +20,7 @@ func commandRegister(c *config, args ...string) error {
 
 	username := args[0]
 	isadmin := false
-	if len(args) == 2{
+	if len(args) == 2 {
 		username = args[1]
 		isadmin = true
 	}
@@ -41,7 +41,7 @@ func commandRegister(c *config, args ...string) error {
 			fmt.Println("please provide valid password")
 			continue
 		} else {
-			newUser, err := c.db.AddUser(username, input[0],isadmin)
+			newUser, err := c.db.AddUser(username, input[0], time.Now().Local().UTC(), time.Now().Local().UTC(), isadmin)
 			if err != nil {
 				return err
 			}
@@ -127,7 +127,7 @@ func commandListUsers(c *config, args ...string) error {
 	if c.user == nil {
 		return fmt.Errorf("login in as admin to view all registered users")
 	}
-	if !c.user.IsAdmin{
+	if !c.user.IsAdmin {
 		return fmt.Errorf("not authorized to list users")
 	}
 	users, err := c.db.GetUsers()
@@ -135,7 +135,7 @@ func commandListUsers(c *config, args ...string) error {
 		return err
 	}
 
-	fmt.Printf("%-5s %-8s %-14s %-12s %-5s %-5s\n", "No", "Name", "CreatedAt", "UpdatedAt", "Tasks","admin")
+	fmt.Printf("%-5s %-8s %-14s %-12s %-5s %-5s\n", "No", "Name", "CreatedAt", "UpdatedAt", "Tasks", "admin")
 	fmt.Println(strings.Repeat("-", 60)) // Add a separator line
 
 	// Print each user with aligned columns

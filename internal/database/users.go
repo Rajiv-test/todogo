@@ -12,16 +12,16 @@ type User struct {
 	Updated_at time.Time
 	Tasks      int
 	Password   string
-	IsAdmin bool
+	IsAdmin    bool
 }
 
-func (c *Client) AddUser(username, password string,isadmin bool) (*User, error) {
+func (c *Client) AddUser(username, password string, created_at, updated_at time.Time, isadmin bool) (*User, error) {
 	query := `INSERT INTO users
-			(name,password,is_admin)
-		values (?,?,?)Returning *;`
-	userRow := c.db.QueryRow(query, username, password,isadmin)
+			(name,created_at,updated_at,password,is_admin)
+		values (?,?,?,?,?)Returning *;`
+	userRow := c.db.QueryRow(query, username, created_at, updated_at, password, isadmin)
 	var user User
-	err := userRow.Scan(&user.Id, &user.Name, &user.Created_at, &user.Updated_at, &user.Tasks, &user.Password,&user.IsAdmin)
+	err := userRow.Scan(&user.Id, &user.Name, &user.Created_at, &user.Updated_at, &user.Tasks, &user.Password, &user.IsAdmin)
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +33,7 @@ func (c *Client) GetUser(username string) (User, error) {
 	query := `SELECT * FROM users WHERE name = ?;`
 	queryRow := c.db.QueryRow(query, username)
 	var user User
-	err := queryRow.Scan(&user.Id, &user.Name, &user.Created_at, &user.Updated_at, &user.Tasks, &user.Password,&user.IsAdmin)
+	err := queryRow.Scan(&user.Id, &user.Name, &user.Created_at, &user.Updated_at, &user.Tasks, &user.Password, &user.IsAdmin)
 	if err != nil {
 		return User{}, err
 	}
@@ -60,7 +60,7 @@ func (c *Client) GetUsers() ([]User, error) {
 	// Assuming users is an appropriate slice
 	for dbUserRows.Next() {
 		var user User // or whatever your user type is
-		err := dbUserRows.Scan(&user.Id, &user.Name, &user.Created_at, &user.Updated_at, &user.Tasks, &user.Password,&user.IsAdmin)
+		err := dbUserRows.Scan(&user.Id, &user.Name, &user.Created_at, &user.Updated_at, &user.Tasks, &user.Password, &user.IsAdmin)
 		if err != nil {
 			return []User{}, err
 		}

@@ -19,9 +19,9 @@ type Task struct {
 }
 
 func (c *Client) AddTask(username string, taskname string, description string, deadline sql.NullTime) error {
-	query := `INSERT INTO tasks (username,taskname,description,deadline)
-				VALUES (?,?,?,?);`
-	_, err := c.db.Exec(query, username, taskname, description, deadline)
+	query := `INSERT INTO tasks (username,taskname,description,created_at,updated_at,deadline)
+				VALUES (?,?,?,?,?,?);`
+	_, err := c.db.Exec(query, username, taskname, description,time.Now().Format(time.DateTime),time.Now().Format(time.DateTime), deadline.Time.Format(time.DateTime))
 	if err != nil {
 		return fmt.Errorf("error while creating task %v", err)
 	}
@@ -64,7 +64,7 @@ func (c *Client) GetTasks(username string) ([]Task, error) {
 
 func (c *Client) MarkComplete(username, taskname string) error {
 	query := `UPDATE tasks SET completed = 1,updated_at = ? WHERE username = ? AND taskname = ?;`
-	_, err := c.db.Exec(query, time.Now(), username, taskname)
+	_, err := c.db.Exec(query, time.Now().Format(time.DateTime), username, taskname)
 	if err != nil {
 		return fmt.Errorf("error while updating task completion %v", err)
 	}
@@ -72,8 +72,8 @@ func (c *Client) MarkComplete(username, taskname string) error {
 }
 
 func (c *Client) ExtendDeadline(username, taskname string, deadline sql.NullTime) error {
-	query := `UPDATE tasks SET deadline = ? WHERE username = ? AND taskname = ?;`
-	_, err := c.db.Exec(query,deadline, username, taskname)
+	query := `UPDATE tasks SET updated_at = ?, deadline = ? WHERE username = ? AND taskname = ?;`
+	_, err := c.db.Exec(query,time.Now().Format(time.DateTime),deadline.Time.Format(time.DateTime), username, taskname)
 	if err != nil {
 		return fmt.Errorf("error while extending deadline %v", err)
 	}
