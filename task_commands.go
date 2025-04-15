@@ -34,12 +34,44 @@ func commandAdd(c *config, args ...string) error {
 	description := reader.Text()
 	err = c.db.AddTask(c.user.Name, taskname, description, deadline)
 	if err != nil {
-		return fmt.Errorf("error adding task %v", err)
+		if err.Error() == "UNIQUE constraint failed: tasks.taskname"{
+			return fmt.Errorf("task name taken choose another")
+		}else{
+			return fmt.Errorf("error adding task %v", err)
+		}
 	}
 	fmt.Println("task created successfully")
 	return nil
 
 }
+
+func commandRemove(c *config,args ...string) error{
+	if len(args) != 1 && (len(args) == 2 && (args[0] != "-a" || args[1] != "tasks")){
+		return fmt.Errorf("wrong usage of rem command use help command to learn more")
+	}
+	if c.user == nil {
+		return fmt.Errorf("login to create tasks")
+	}
+	if len(args) == 1{
+		if len(args[0]) == 0{
+			return fmt.Errorf("enter valid taskname")
+		}
+		err := c.db.DeleteTask(c.user.Name,args[0])
+		if err != nil{
+			return err
+		}
+		fmt.Println("task successfully deleted")
+		return nil
+	}else{
+		err := c.db.DeleteTasks(c.user.Name)
+		if err != nil{
+			return err
+	}
+	fmt.Println("Successfully deleted all tasks for user",c.user.Name)
+}
+	return nil
+}
+
 
 func parseDeadline(durationStr string) (sql.NullTime, error) {
 	// Handle days specifically since Go doesn't have a direct "d" unit

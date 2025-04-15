@@ -1,7 +1,6 @@
 package database
 
 import (
-	"log"
 	"time"
 )
 
@@ -25,7 +24,6 @@ func (c *Client) AddUser(username, password string, created_at, updated_at time.
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("User %s added successfully with ID %d", user.Name, user.Id)
 	return &user, nil
 }
 

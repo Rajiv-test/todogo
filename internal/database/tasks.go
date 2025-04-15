@@ -2,7 +2,6 @@ package database
 
 import (
 	"database/sql"
-	"fmt"
 	"time"
 )
 
@@ -21,11 +20,10 @@ type Task struct {
 func (c *Client) AddTask(username string, taskname string, description string, deadline sql.NullTime) error {
 	query := `INSERT INTO tasks (username,taskname,description,created_at,updated_at,deadline)
 				VALUES (?,?,?,?,?,?);`
-	_, err := c.db.Exec(query, username, taskname, description,time.Now().Format(time.DateTime),time.Now().Format(time.DateTime), deadline.Time.Format(time.DateTime))
+	_, err := c.db.Exec(query, username, taskname, description,time.Now(),time.Now(), deadline)
 	if err != nil {
-		return fmt.Errorf("error while creating task %v", err)
+		return err
 	}
-	fmt.Print("task successfully created")
 	return nil
 }
 
@@ -33,12 +31,12 @@ func (c *Client) GetTask(username, taskname string) (Task, error) {
 	query := `SELECT * FROM tasks WHERE username = ? AND taskname = ?;`
 	taskRow, err := c.db.Query(query, username, taskname)
 	if err != nil {
-		return Task{}, fmt.Errorf("error while fetching task %v", err)
+		return Task{},err
 	}
 	var task Task
 	err = taskRow.Scan(&task.Id, &task.Username, &task.TaskName, &task.Description, &task.CreatedAt, &task.UpdatedAt, &task.Completed, &task.Deadline, &task.OverDeadline)
 	if err != nil {
-		return Task{}, fmt.Errorf("error while scanning task %v", err)
+		return Task{}, err
 	}
 	return task, nil
 }
@@ -47,7 +45,7 @@ func (c *Client) GetTasks(username string) ([]Task, error) {
 	query := `SELECT * FROM tasks WHERE username = ?;`
 	taskRows, err := c.db.Query(query, username)
 	if err != nil {
-		return []Task{}, fmt.Errorf("error while getting tasks %v", err)
+		return []Task{}, err
 	}
 	var tasks []Task
 	for taskRows.Next() {
@@ -61,21 +59,38 @@ func (c *Client) GetTasks(username string) ([]Task, error) {
 	}
 	return tasks, nil
 }
+func (c *Client) DeleteTask(username, taskname string) error{
+	query := "DELETE FROM tasks WHERE username = ? AND taskname = ?;"
+	_,err := c.db.Exec(query,username,taskname) 
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Client) DeleteTasks(username string) error{
+	query := "DELETE FROM tasks WHERE username = ?;"
+	_,err := c.db.Exec(query,username) 
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 func (c *Client) MarkComplete(username, taskname string) error {
 	query := `UPDATE tasks SET completed = 1,updated_at = ? WHERE username = ? AND taskname = ?;`
-	_, err := c.db.Exec(query, time.Now().Format(time.DateTime), username, taskname)
+	_, err := c.db.Exec(query, time.Now(), username, taskname)
 	if err != nil {
-		return fmt.Errorf("error while updating task completion %v", err)
+		return err
 	}
 	return nil
 }
 
 func (c *Client) ExtendDeadline(username, taskname string, deadline sql.NullTime) error {
 	query := `UPDATE tasks SET updated_at = ?, deadline = ? WHERE username = ? AND taskname = ?;`
-	_, err := c.db.Exec(query,time.Now().Format(time.DateTime),deadline.Time.Format(time.DateTime), username, taskname)
+	_, err := c.db.Exec(query,time.Now(),deadline, username, taskname)
 	if err != nil {
-		return fmt.Errorf("error while extending deadline %v", err)
+		return err
 	}
 	return nil
 }

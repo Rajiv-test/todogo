@@ -53,9 +53,9 @@ func getcommands() map[string]command {
 		},
 		"rem": {
 			name:        "remove",
-			usage:       "rem [-a] [taskname]",
-			description: "removes specified task from user's list or all tasks with -a tag ignores taskname even if it's provided",
-			callback:    nil,
+			usage:       "rem [-a] [taskname]/[tasks]",
+			description: "removes specified task from user's list or all tasks with -a tag(provide tasks at the end with -a tag instead of taskname",
+			callback:    commandRemove,
 		},
 		"mod": {
 			name:        "modify",
@@ -65,7 +65,7 @@ func getcommands() map[string]command {
 		},
 		"lst": {
 			name:        "list tasks",
-			usage:       "[-u][-c] [n] tasks",
+			usage:       "[-u] [n] tasks",
 			description: "lists all the tasks for the user if tag is not provided,\n		-u to list all uncompleted tasks and -c list all completed tasks and\n		provide optional [n(integer)] to list n tasks",
 			callback:    nil,
 		},

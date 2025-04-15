@@ -51,7 +51,7 @@ func (c *Client) automigrate() error {
 	CREATE TABLE IF NOT EXISTS tasks (
 		id INTEGER PRIMARY KEY NOT NULL,
 		username INTEGER NOT NULL REFERENCES users(name) ON DELETE CASCADE,
-		taskname TEXT NOT NULL,
+		taskname TEXT NOT NULL UNIQUE,
 		description TEXT DEFAULT 'No Description',
 		created_at TIMESTAMP NOT NULL,
 		updated_at TIMESTAMP NOT NULL,	
