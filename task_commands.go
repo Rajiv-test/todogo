@@ -145,3 +145,66 @@ func parseDeadline(durationStr string) (sql.NullTime, error) {
 
 	return sql.NullTime{Time: time.Now().Local().Add(duration), Valid: true}, nil
 }
+
+func commandMarkComplete(c *config,args ...string) error{
+	if len(args) != 1 {
+		return fmt.Errorf("wrong usage of tick command use help command to learn more")
+	}
+	if c.user == nil{
+		return fmt.Errorf("login to use commands")
+	}
+	if args[0] == ""{
+		return fmt.Errorf("enter valid taskname")
+	}
+	task,err := c.db.GetTask(c.user.Name,args[0])
+	if err != nil{
+		if err == sql.ErrNoRows{
+			return fmt.Errorf("no task named %v use lst command to view your tasks",args[0])
+		}
+		return fmt.Errorf("error while fetching task %v",err)
+	}
+	if task.Completed{
+		return fmt.Errorf("task already completed")
+	}
+	err = c.db.MarkComplete(c.user.Name,task.TaskName)
+	if err != nil{
+		return fmt.Errorf("error while marking task complete %v",err)
+	}
+	fmt.Println("Hooray! you completed a task")
+	return nil
+}
+func commandMarkIncomplete(c *config,args ...string) error{
+	if len(args) < 1 || len(args) > 2{
+		return fmt.Errorf("wrong usage of tick command use help command to learn more")
+	}
+	if c.user == nil{
+		return fmt.Errorf("login to use commands")
+	}
+	if args[0] == ""{
+		return fmt.Errorf("enter valid taskname")
+	}
+	var deadline sql.NullTime
+	var err error
+	if len(args) == 2{
+		deadline, err = parseDeadline(args[1])
+		if err != nil {
+			return fmt.Errorf("enter valid deadline %v",err)
+		}
+	}
+	task,err := c.db.GetTask(c.user.Name,args[0])
+	if err != nil{
+		if err == sql.ErrNoRows{
+			return fmt.Errorf("no task named %v use lst command to view your tasks",deadline)
+		}
+		return fmt.Errorf("error while fetching task %v",err)
+	}
+	if !task.Completed{
+		return fmt.Errorf("task is still incomplete")
+	}
+	err = c.db.MarkIncomplete(c.user.Name,task.TaskName,deadline)
+	if err != nil{
+		return fmt.Errorf("error while marking task incomplete %v",err)
+	}
+	fmt.Println("successfully changed the status of task to incomplete")
+	return nil
+}

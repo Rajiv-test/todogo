@@ -57,11 +57,17 @@ func getcommands() map[string]command {
 			description: "removes specified task from user's list or all tasks with -a tag(provide tasks at the end with -a tag instead of taskname",
 			callback:    commandRemove,
 		},
-		"mod": {
-			name:        "modify",
-			usage:       "work in progress",
-			description: "modifies specified task or user details",
-			callback:    nil,
+		"tick": {
+			name:        "mark complete",
+			usage:       "tick taskname",
+			description: "use the tick command to mark the task completed",
+			callback:    commandMarkComplete,
+		},
+		"untick": {
+			name:        "mark incomplete",
+			usage:       "untick taskname",
+			description: "use the untick command to change the completed status of the task to incomplete",
+			callback:    commandMarkIncomplete,
 		},
 		"lst": {
 			name:        "list tasks",

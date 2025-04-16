@@ -28,17 +28,22 @@ func (c *Client) AddTask(username string, taskname string, description string, d
 }
 
 func (c *Client) GetTask(username, taskname string) (Task, error) {
-	query := `SELECT * FROM tasks WHERE username = ? AND taskname = ?;`
-	taskRow, err := c.db.Query(query, username, taskname)
-	if err != nil {
-		return Task{},err
-	}
-	var task Task
-	err = taskRow.Scan(&task.Id, &task.Username, &task.TaskName, &task.Description, &task.CreatedAt, &task.UpdatedAt, &task.Deadline, &task.Completed, &task.OverDeadline)
-	if err != nil {
-		return Task{}, err
-	}
-	return task, nil
+    query := `SELECT * FROM tasks WHERE username = ? AND taskname = ?;`
+    
+    // Use QueryRow instead of Query since we're expecting at most one result
+    row := c.db.QueryRow(query, username, taskname)
+    
+    var task Task
+    err := row.Scan(&task.Id, &task.Username, &task.TaskName, &task.Description, 
+                   &task.CreatedAt, &task.UpdatedAt, &task.Deadline, 
+                   &task.Completed, &task.OverDeadline)
+    
+    // Now row.Scan will return sql.ErrNoRows if no rows were found
+    if err != nil {
+        return Task{}, err
+    }
+    
+    return task, nil
 }
 
 func (c *Client) GetTasks(username string) ([]Task, error) {
@@ -48,7 +53,7 @@ func (c *Client) GetTasks(username string) ([]Task, error) {
         WHERE username = ? 
         AND completed = 0
         AND deadline IS NOT NULL 
-        AND deadline < datetime('now')
+        AND deadline < datetime('now','+6 hours')
     `
     _, err := c.db.Exec(updateQuery, username)
     if err != nil {
@@ -142,6 +147,14 @@ func (c *Client) DeleteTasks(username string) error{
 func (c *Client) MarkComplete(username, taskname string) error {
 	deadline := sql.NullTime{Time: time.Time{},Valid: false}
 	query := `UPDATE tasks SET completed = 1,updated_at = ?, deadline = ? WHERE username = ? AND taskname = ?;`
+	_, err := c.db.Exec(query, time.Now(),deadline, username, taskname)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (c *Client) MarkIncomplete(username, taskname string, deadline sql.NullTime) error {
+	query := `UPDATE tasks SET completed = 0,updated_at = ?, deadline = ? WHERE username = ? AND taskname = ?;`
 	_, err := c.db.Exec(query, time.Now(),deadline, username, taskname)
 	if err != nil {
 		return err
