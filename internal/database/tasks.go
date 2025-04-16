@@ -42,6 +42,18 @@ func (c *Client) GetTask(username, taskname string) (Task, error) {
 }
 
 func (c *Client) GetTasks(username string) ([]Task, error) {
+	updateQuery := `
+        UPDATE tasks 
+        SET over_deadline = 1 
+        WHERE username = ? 
+        AND completed = 0
+        AND deadline IS NOT NULL 
+        AND deadline < datetime('now')
+    `
+    _, err := c.db.Exec(updateQuery, username)
+    if err != nil {
+        return nil, err
+    }
 	query := `SELECT * FROM tasks
 		WHERE username = ? 
 		ORDER BY 
@@ -70,6 +82,18 @@ func (c *Client) GetTasks(username string) ([]Task, error) {
 }
 
 func (c *Client) GetUncompletedTasks(username string) ([]Task,error){
+	updateQuery := `
+        UPDATE tasks 
+        SET over_deadline = 1 
+        WHERE username = ? 
+        AND completed = 0
+        AND deadline IS NOT NULL 
+        AND deadline < datetime('now')
+    `
+    _, err := c.db.Exec(updateQuery, username)
+    if err != nil {
+        return nil, err
+    }
 	query := `SELECT * FROM tasks
 		WHERE username = ? AND completed = 0
 		ORDER BY 
@@ -116,8 +140,9 @@ func (c *Client) DeleteTasks(username string) error{
 }
 
 func (c *Client) MarkComplete(username, taskname string) error {
-	query := `UPDATE tasks SET completed = 1,updated_at = ? WHERE username = ? AND taskname = ?;`
-	_, err := c.db.Exec(query, time.Now(), username, taskname)
+	deadline := sql.NullTime{Time: time.Time{},Valid: false}
+	query := `UPDATE tasks SET completed = 1,updated_at = ?, deadline = ? WHERE username = ? AND taskname = ?;`
+	_, err := c.db.Exec(query, time.Now(),deadline, username, taskname)
 	if err != nil {
 		return err
 	}
