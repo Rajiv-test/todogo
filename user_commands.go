@@ -5,11 +5,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/fatih/color"
+	"github.com/rodaine/table"
 	"os"
 	"strings"
 	"time"
-	"github.com/fatih/color"
-	"github.com/rodaine/table"
 )
 
 func commandRegister(c *config, args ...string) error {
@@ -137,13 +137,13 @@ func commandListUsers(c *config, args ...string) error {
 		return err
 	}
 	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
-		columnFmt := color.New(color.FgRed).SprintfFunc()
+	columnFmt := color.New(color.FgRed).SprintfFunc()
 
-	tbl:= table.New("No", "userName", "CreatedAt", "UpdatedAt", "Tasks")
+	tbl := table.New("No", "userName", "CreatedAt", "UpdatedAt", "Tasks")
 	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
 
-	for i,user := range users{
-		tbl.AddRow(i+1,user.Name,user.Created_at.Format(time.DateOnly),user.Updated_at.Format(time.DateOnly),user.Tasks)
+	for i, user := range users {
+		tbl.AddRow(i+1, user.Name, user.Created_at.Format(time.DateOnly), user.Updated_at.Format(time.DateOnly), user.Tasks)
 	}
 	tbl.Print()
 

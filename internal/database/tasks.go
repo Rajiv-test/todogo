@@ -20,7 +20,7 @@ type Task struct {
 func (c *Client) AddTask(username string, taskname string, description string, deadline sql.NullTime) error {
 	query := `INSERT INTO tasks (username,taskname,description,created_at,updated_at,deadline)
 				VALUES (?,?,?,?,?,?);`
-	_, err := c.db.Exec(query, username, taskname, description,time.Now(),time.Now(), deadline)
+	_, err := c.db.Exec(query, username, taskname, description, time.Now(), time.Now(), deadline)
 	if err != nil {
 		return err
 	}
@@ -28,22 +28,22 @@ func (c *Client) AddTask(username string, taskname string, description string, d
 }
 
 func (c *Client) GetTask(username, taskname string) (Task, error) {
-    query := `SELECT * FROM tasks WHERE username = ? AND taskname = ?;`
-    
-    // Use QueryRow instead of Query since we're expecting at most one result
-    row := c.db.QueryRow(query, username, taskname)
-    
-    var task Task
-    err := row.Scan(&task.Id, &task.Username, &task.TaskName, &task.Description, 
-                   &task.CreatedAt, &task.UpdatedAt, &task.Deadline, 
-                   &task.Completed, &task.OverDeadline)
-    
-    // Now row.Scan will return sql.ErrNoRows if no rows were found
-    if err != nil {
-        return Task{}, err
-    }
-    
-    return task, nil
+	query := `SELECT * FROM tasks WHERE username = ? AND taskname = ?;`
+
+	// Use QueryRow instead of Query since we're expecting at most one result
+	row := c.db.QueryRow(query, username, taskname)
+
+	var task Task
+	err := row.Scan(&task.Id, &task.Username, &task.TaskName, &task.Description,
+		&task.CreatedAt, &task.UpdatedAt, &task.Deadline,
+		&task.Completed, &task.OverDeadline)
+
+	// Now row.Scan will return sql.ErrNoRows if no rows were found
+	if err != nil {
+		return Task{}, err
+	}
+
+	return task, nil
 }
 
 func (c *Client) GetTasks(username string) ([]Task, error) {
@@ -55,10 +55,10 @@ func (c *Client) GetTasks(username string) ([]Task, error) {
         AND deadline IS NOT NULL 
         AND deadline < datetime('now','+6 hours')
     `
-    _, err := c.db.Exec(updateQuery, username)
-    if err != nil {
-        return nil, err
-    }
+	_, err := c.db.Exec(updateQuery, username)
+	if err != nil {
+		return nil, err
+	}
 	query := `SELECT * FROM tasks
 		WHERE username = ? 
 		ORDER BY 
@@ -86,7 +86,7 @@ func (c *Client) GetTasks(username string) ([]Task, error) {
 	return tasks, nil
 }
 
-func (c *Client) GetUncompletedTasks(username string) ([]Task,error){
+func (c *Client) GetUncompletedTasks(username string) ([]Task, error) {
 	updateQuery := `
         UPDATE tasks 
         SET over_deadline = 1 
@@ -95,10 +95,10 @@ func (c *Client) GetUncompletedTasks(username string) ([]Task,error){
         AND deadline IS NOT NULL 
         AND deadline < datetime('now')
     `
-    _, err := c.db.Exec(updateQuery, username)
-    if err != nil {
-        return nil, err
-    }
+	_, err := c.db.Exec(updateQuery, username)
+	if err != nil {
+		return nil, err
+	}
 	query := `SELECT * FROM tasks
 		WHERE username = ? AND completed = 0
 		ORDER BY 
@@ -111,7 +111,7 @@ func (c *Client) GetUncompletedTasks(username string) ([]Task,error){
 	var tasks []Task
 	for taskRows.Next() {
 		var task Task // or whatever your user type is
-		err := taskRows.Scan(&task.Id, &task.Username, &task.TaskName, &task.Description, &task.CreatedAt, &task.UpdatedAt,&task.Deadline, &task.Completed, &task.OverDeadline)
+		err := taskRows.Scan(&task.Id, &task.Username, &task.TaskName, &task.Description, &task.CreatedAt, &task.UpdatedAt, &task.Deadline, &task.Completed, &task.OverDeadline)
 		if err != nil {
 			return []Task{}, err
 		}
@@ -122,22 +122,18 @@ func (c *Client) GetUncompletedTasks(username string) ([]Task,error){
 
 }
 
-
-
-
-
-func (c *Client) DeleteTask(username, taskname string) error{
+func (c *Client) DeleteTask(username, taskname string) error {
 	query := "DELETE FROM tasks WHERE username = ? AND taskname = ?;"
-	_,err := c.db.Exec(query,username,taskname) 
+	_, err := c.db.Exec(query, username, taskname)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *Client) DeleteTasks(username string) error{
+func (c *Client) DeleteTasks(username string) error {
 	query := "DELETE FROM tasks WHERE username = ?;"
-	_,err := c.db.Exec(query,username) 
+	_, err := c.db.Exec(query, username)
 	if err != nil {
 		return err
 	}
@@ -145,9 +141,9 @@ func (c *Client) DeleteTasks(username string) error{
 }
 
 func (c *Client) MarkComplete(username, taskname string) error {
-	deadline := sql.NullTime{Time: time.Time{},Valid: false}
+	deadline := sql.NullTime{Time: time.Time{}, Valid: false}
 	query := `UPDATE tasks SET completed = 1,updated_at = ?, deadline = ? WHERE username = ? AND taskname = ?;`
-	_, err := c.db.Exec(query, time.Now(),deadline, username, taskname)
+	_, err := c.db.Exec(query, time.Now(), deadline, username, taskname)
 	if err != nil {
 		return err
 	}
@@ -155,7 +151,7 @@ func (c *Client) MarkComplete(username, taskname string) error {
 }
 func (c *Client) MarkIncomplete(username, taskname string, deadline sql.NullTime) error {
 	query := `UPDATE tasks SET completed = 0,updated_at = ?, deadline = ? WHERE username = ? AND taskname = ?;`
-	_, err := c.db.Exec(query, time.Now(),deadline, username, taskname)
+	_, err := c.db.Exec(query, time.Now(), deadline, username, taskname)
 	if err != nil {
 		return err
 	}
@@ -164,7 +160,7 @@ func (c *Client) MarkIncomplete(username, taskname string, deadline sql.NullTime
 
 func (c *Client) ExtendDeadline(username, taskname string, deadline sql.NullTime) error {
 	query := `UPDATE tasks SET updated_at = ?, deadline = ? WHERE username = ? AND taskname = ?;`
-	_, err := c.db.Exec(query,time.Now(),deadline, username, taskname)
+	_, err := c.db.Exec(query, time.Now(), deadline, username, taskname)
 	if err != nil {
 		return err
 	}

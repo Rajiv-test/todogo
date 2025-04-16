@@ -74,11 +74,11 @@ func (c *Client) automigrate() error {
             updated_at = CURRENT_TIMESTAMP
         WHERE name = NEW.username;
     END;`
-    
-    _, err = c.db.Exec(incrementTriggerQuery)
-    if err != nil {
-        return fmt.Errorf("error setting increment trigger %v",err)
-    }
+
+	_, err = c.db.Exec(incrementTriggerQuery)
+	if err != nil {
+		return fmt.Errorf("error setting increment trigger %v", err)
+	}
 	decrementTriggerQuery := `CREATE TRIGGER IF NOT EXISTS decrement_user_tasks
 			AFTER DELETE ON tasks
 			FOR EACH ROW
@@ -89,9 +89,9 @@ func (c *Client) automigrate() error {
 				WHERE name = OLD.username;
 			END;`
 	_, err = c.db.Exec(decrementTriggerQuery)
-    if err != nil {
-        return fmt.Errorf("error setting decrement trigger %v",err)
-    }
+	if err != nil {
+		return fmt.Errorf("error setting decrement trigger %v", err)
+	}
 	return nil
 }
 
